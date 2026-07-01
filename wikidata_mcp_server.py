@@ -58,5 +58,3 @@ def get_wikidata_relationships(qid: str):
 # Example Usage:
 radiohead_qid = search_entity("Radiohead") # Q11680
 print(get_wikidata_relationships(radiohead_qid))
-
-#print(search_entity("Python (programming language)"))
