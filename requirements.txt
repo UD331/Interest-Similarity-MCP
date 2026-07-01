@@ -1,0 +1,6 @@
+fastmcp
+pydantic
+dotenv
+requests
+langchain
+wikipedia-api
