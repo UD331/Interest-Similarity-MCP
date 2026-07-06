@@ -1,12 +1,10 @@
 from fastmcp import FastMCP
 import requests
-from dotenv import load_dotenv
-import os
+from config import OPEN_ALEX_API_KEY
 
-load_dotenv()
-OPEN_ALEX_API_KEY = os.getenv("OPEN_ALEX_API_KEY")
 open_alex_server = FastMCP("OpenAlex MCP") # server
 
+@open_alex_server.tool
 def semantic_search_entity(concept:str):    
     url = f"https://api.openalex.org/works?search.semantic={concept}&sort=cited_by_count:desc&per_page=10"
     
@@ -19,6 +17,7 @@ def semantic_search_entity(concept:str):
     res = requests.get(url, params=params, headers=headers, allow_redirects=True)
     return res.json()['results']
 
+@open_alex_server.tool
 def direct_entity_search(article_id:str):
     url = f"https://api.openalex.org/works/{article_id}"
     
@@ -30,10 +29,6 @@ def direct_entity_search(article_id:str):
     }
     res = requests.get(url, params=params, headers=headers, allow_redirects=True)
     return res.json()
-
-@open_alex_server.tool
-def health_check() -> str:
-    return "All systems are operational."
 
 work = (direct_entity_search("W602506921"))
 

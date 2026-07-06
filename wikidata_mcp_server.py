@@ -1,8 +1,9 @@
 from fastmcp import FastMCP
 import requests
 
-server = FastMCP("Wikidata MCP") # server
+wikidata_server = FastMCP("Wikidata MCP") # server
 
+@wikidata_server.tool
 def search_entity(label:str, lang="en"):
     # this one is to get the QID & other high-level of the entity from Wikidata
     # which can then be used for relationship search after
@@ -20,6 +21,7 @@ def search_entity(label:str, lang="en"):
     res = requests.get(url, params=params, headers=headers)
     return res.json()["search"][0]["id"]
 
+@wikidata_server.tool
 def get_wikidata_relationships(qid: str):
     url = "https://query.wikidata.org/sparql"
     headers = {

@@ -1,12 +1,10 @@
 from typing import List
 from fastmcp import FastMCP
 import requests
-from dotenv import load_dotenv
-import os
+from config import TASTEDIVE_API_KEY
 from models import TasteDive
 
-load_dotenv()
-TASTEDIVE_API_KEY = os.getenv("TASTEDIVE_API_KEY")
+
 
 tastedive_server = FastMCP("Tastedive MCP") # server
 
