@@ -12,7 +12,7 @@ wiki = wikipediaapi.AsyncWikipedia(
 )
 
 @wikipedia_server.tool
-async def get_page_info(query: str = ""):
+async def get_page_info(query: str = "") -> WikipediaPageInfo:
     # this is lazy loading; until we search something like page.exists or something, nothing is there
     wiki_page = wiki.page(query)
     page_exists = await wiki_page.exists()
@@ -23,7 +23,7 @@ async def get_page_info(query: str = ""):
     return wiki_info
 
 @wikipedia_server.tool
-async def get_clean_section_links(title: str):
+async def get_clean_section_links(title: str) -> list[str]:
     url = "https://en.wikipedia.org/w/api.php"
     params = {
         "action": "parse",
@@ -59,7 +59,7 @@ async def get_clean_section_links(title: str):
             return filtered_links
 
 @wikipedia_server.tool
-async def search_for_possible_articles(query:str):
+async def search_for_possible_articles(query:str) -> list[str]:
     # this one is for letting LLM search for possible articles and then selecting from there
     # which one is actually relevant- i.e. searching Python and then deciding between the proramming language 
     # and the snake
@@ -70,4 +70,4 @@ async def search_for_possible_articles(query:str):
         options.append(title)
     return options
 
-print(asyncio.run(search_for_possible_articles("Radiohead")))
+print(asyncio.run(get_clean_section_links("Radiohead")))

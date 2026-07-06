@@ -1,11 +1,38 @@
 from fastmcp import FastMCP
 import requests
 from config import OPEN_ALEX_API_KEY
+from models import OpenAlexSearchResult
 
 open_alex_server = FastMCP("OpenAlex MCP") # server
 
+def undo_inverted_index(inverted_index):
+    
+    """
+    The purpose of the function is to 'undo' and inverted index. It inputs an inverted index and
+    returns the original string.
+    """
+    if not inverted_index:
+        return ""
+    #create empty lists to store uninverted index
+    word_index = []
+    words_unindexed = []
+    
+    #loop through index and return key-value pairs
+    for k,v in inverted_index.items(): 
+        for index in v: word_index.append([k,index])
+
+    #sort by the index
+    word_index = sorted(word_index, key = lambda x : x[1])
+    
+    #join only the values and flatten
+    for pair in word_index:
+        words_unindexed.append(pair[0])
+    words_unindexed = ' '.join(words_unindexed)
+    
+    return(words_unindexed)
+
 @open_alex_server.tool
-def semantic_search_entity(concept:str):    
+def semantic_search_entity(concept:str) -> list[OpenAlexSearchResult]:    
     url = f"https://api.openalex.org/works?search.semantic={concept}&sort=cited_by_count:desc&per_page=10"
     
     headers = {
@@ -15,10 +42,22 @@ def semantic_search_entity(concept:str):
         "api_key": OPEN_ALEX_API_KEY
     }
     res = requests.get(url, params=params, headers=headers, allow_redirects=True)
-    return res.json()['results']
+    search_results = []
+    for work in res.json()['results']:
+        search_result = OpenAlexSearchResult(
+            title=work.get("display_name"),
+            year=work.get("publication_year"),
+            citations=work.get("cited_by_count"),
+            similarity=work.get("relevance_score", -float('inf')),
+            id=work.get("id").split('.org/')[1], 
+        )
+
+        print(undo_inverted_index(work.get("abstract_inverted_index", None)))
+        search_results.append(search_result)
+    return search_results
 
 @open_alex_server.tool
-def direct_entity_search(article_id:str):
+def direct_entity_search(article_id:str) -> OpenAlexSearchResult:
     url = f"https://api.openalex.org/works/{article_id}"
     
     headers = {
@@ -28,15 +67,14 @@ def direct_entity_search(article_id:str):
         "api_key": OPEN_ALEX_API_KEY
     }
     res = requests.get(url, params=params, headers=headers, allow_redirects=True)
-    return res.json()
+    search_result = OpenAlexSearchResult(
+        title=res.json().get("display_name"),
+        year=res.json().get("publication_year"),
+        citations=res.json().get("cited_by_count"),
+        id=res.json().get("id").split('.org/')[1],
+    )
+    return search_result
 
-work = (direct_entity_search("W602506921"))
-
-if work:
-    print({
-        "title": work["display_name"],
-        "year": work["publication_year"],
-        "citations": work["cited_by_count"],
-        "doi": work.get("doi"),
-        "id": work["id"].split('.org/')[1],
-    })
+work = (semantic_search_entity("Radiohead"))
+print(work)
+    

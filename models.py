@@ -9,5 +9,9 @@ class WikipediaPageInfo(BaseModel):
     exists: bool = False
     summary: str | None = None
 
-class WikipediaSearchResult(BaseModel):
+class OpenAlexSearchResult(BaseModel):
     title: str
+    year: int
+    citations: int
+    similarity: float = -float('inf') # this is to differentiate between direct vs semantic search results
+    id: str
