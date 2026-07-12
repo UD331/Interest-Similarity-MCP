@@ -11,7 +11,9 @@ wiki = wikipediaapi.AsyncWikipedia(
     language="en"
 )
 
-@wikipedia_server.tool
+@wikipedia_server.tool(
+    description="Get if a Wikipedia page exists and if so, its summary."
+)
 async def get_page_info(query: str = "") -> WikipediaPageInfo:
     # this is lazy loading; until we search something like page.exists or something, nothing is there
     wiki_page = wiki.page(query)
@@ -22,7 +24,11 @@ async def get_page_info(query: str = "") -> WikipediaPageInfo:
         wiki_info.summary = summary
     return wiki_info
 
-@wikipedia_server.tool
+@wikipedia_server.tool(
+    description="""Get clean links from a Wikipedia page introduction section that be used for
+    further exploration of related topics. This function filters out non-encyclopedic links such
+    as categories, talk pages, and help links."""
+)
 async def get_clean_section_links(title: str) -> list[str]:
     url = "https://en.wikipedia.org/w/api.php"
     params = {
@@ -37,10 +43,8 @@ async def get_clean_section_links(title: str) -> list[str]:
     async with aiohttp.ClientSession() as session:
         async with session.get(url, params=params, headers=headers) as response:
             data = await response.json()
-            
             if "parse" not in data:
                 return []
-                
             raw_links = data["parse"]["links"]
             
             # This automatically drops Categories, Talk pages, and Help links.
@@ -58,7 +62,11 @@ async def get_clean_section_links(title: str) -> list[str]:
             filtered_links = [l for l in clean_links if not any(l.startswith(p) for p in SKIP_PREFIXES)]
             return filtered_links
 
-@wikipedia_server.tool
+@wikipedia_server.tool(
+    description="""Search for possible Wikipedia articles based on a  name. This function returns
+    a list of article titles that match the search query, allowing for targeted search of the exact page
+    we want."""
+)
 async def search_for_possible_articles(query:str) -> list[str]:
     # this one is for letting LLM search for possible articles and then selecting from there
     # which one is actually relevant- i.e. searching Python and then deciding between the proramming language 
@@ -70,4 +78,3 @@ async def search_for_possible_articles(query:str) -> list[str]:
         options.append(title)
     return options
 
-print(asyncio.run(get_clean_section_links("Radiohead")))

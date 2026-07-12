@@ -15,3 +15,9 @@ class OpenAlexSearchResult(BaseModel):
     citations: int
     similarity: float = -float('inf') # this is to differentiate between direct vs semantic search results
     id: str
+    abstract: str | None = None
+
+class WikidataRelationship(BaseModel):
+    relationship_type: str
+    name: str
+    qid: str
