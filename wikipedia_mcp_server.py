@@ -1,6 +1,5 @@
 from fastmcp import FastMCP
 import wikipediaapi
-import asyncio
 import aiohttp
 from models import WikipediaPageInfo
 

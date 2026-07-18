@@ -21,3 +21,8 @@ class WikidataRelationship(BaseModel):
     relationship_type: str
     name: str
     qid: str
+
+class WikidataEntity(BaseModel):
+    qid: str
+    name: str
+    description: str | None = None

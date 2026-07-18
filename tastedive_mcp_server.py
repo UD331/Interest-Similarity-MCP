@@ -1,7 +1,8 @@
 from typing import List
 from fastmcp import FastMCP
-import requests
-from config import TASTEDIVE_API_KEY
+import httpx
+import asyncio
+from config import TASTEDIVE_API_KEY, get_with_retry
 from models import TasteDive
 
 tastedive_server = FastMCP("Tastedive MCP") # server
@@ -11,7 +12,7 @@ tastedive_server = FastMCP("Tastedive MCP") # server
         'music', 'movie', 'show', 'book', 'game' regarding the given popular interest from 
         Tastedive API based on a name and limit"""
     )
-def get_recommendations(name, limit=3)-> List[TasteDive]:
+async def get_recommendations(name, limit=3)-> List[TasteDive]:
     url = "https://tastedive.com/api/similar"
     types = ['music', 'movie', 'show', 'book', 'game']
     recommendations = []
@@ -22,7 +23,8 @@ def get_recommendations(name, limit=3)-> List[TasteDive]:
             "type": t
         }
         try:
-            res = requests.get(url, params=params, timeout=(5, 10))  # (connect timeout, read timeout)
+            async with httpx.AsyncClient(timeout=10) as client:
+                res = await get_with_retry(client, url, params, headers={})
             res.raise_for_status()  # Raise an exception for HTTP errors
 
             for values in res.json()['similar']['results']:
@@ -31,7 +33,7 @@ def get_recommendations(name, limit=3)-> List[TasteDive]:
                 recommendation.type = t
                 recommendation.description = values['description']
                 recommendations.append(recommendation)
-        except requests.exceptions.RequestException as e:
+        except httpx.HTTPError as e:
             print(f"Error fetching recommendations for type '{t}': {e}")
             
     return recommendations

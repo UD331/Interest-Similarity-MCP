@@ -1,6 +1,7 @@
 from fastmcp import FastMCP
-import requests
-from config import OPEN_ALEX_API_KEY
+from config import OPEN_ALEX_API_KEY, get_with_retry
+import asyncio
+import httpx
 from models import OpenAlexSearchResult
 
 open_alex_server = FastMCP("OpenAlex MCP") # server
@@ -36,7 +37,7 @@ def undo_inverted_index(inverted_index):
     our concept and return the top 10 results titles, ids, abstracts (if available), etc.
     sorted by relevance and citations"""
 )
-def semantic_search_entity(concept:str) -> list[OpenAlexSearchResult]:    
+async def semantic_search_entity(concept:str) -> list[OpenAlexSearchResult]:    
     url = f"https://api.openalex.org/works?search.semantic={concept}&sort=cited_by_count:desc&per_page=10"
     
     headers = {
@@ -45,7 +46,14 @@ def semantic_search_entity(concept:str) -> list[OpenAlexSearchResult]:
     params = {
         "api_key": OPEN_ALEX_API_KEY
     }
-    res = requests.get(url, params=params, headers=headers, allow_redirects=True, timeout=(5, 10))  # (connect timeout, read timeout)
+    async with httpx.AsyncClient(timeout=10) as client:
+        res = await get_with_retry(
+            client,
+            url,
+            params,
+            headers
+        )
+    #res = requests.get(url, params=params, headers=headers, allow_redirects=True, timeout=(5, 10))  # (connect timeout, read timeout)
     search_results = []
     for work in res.json()['results']:
         search_result = OpenAlexSearchResult(
@@ -64,7 +72,7 @@ def semantic_search_entity(concept:str) -> list[OpenAlexSearchResult]:
     our concept and return the title, citations count, abstracts (if available), etc.
     sorted by relevance and citations"""
 )
-def direct_entity_search(article_id:str) -> OpenAlexSearchResult:
+async def direct_entity_search(article_id:str) -> OpenAlexSearchResult:
     url = f"https://api.openalex.org/works/{article_id}"
     
     headers = {
@@ -73,7 +81,14 @@ def direct_entity_search(article_id:str) -> OpenAlexSearchResult:
     params = {
         "api_key": OPEN_ALEX_API_KEY
     }
-    res = requests.get(url, params=params, headers=headers, allow_redirects=True, timeout=(5, 10))  # (connect timeout, read timeout)
+    async with httpx.AsyncClient(timeout=15) as client:
+        res = await get_with_retry(
+            client,
+            url,
+            params,
+            headers
+        )
+    #res = requests.get(url, params=params, headers=headers, allow_redirects=True, timeout=(5, 10))  # (connect timeout, read timeout)
     search_result = OpenAlexSearchResult(
         title=res.json().get("display_name"),
         year=res.json().get("publication_year"),
