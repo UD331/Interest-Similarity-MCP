@@ -34,7 +34,6 @@ async def search_entity(label:str, lang="en") -> str:
     #res = requests.get(url, params=params, headers=headers, timeout=(5, 10))  # (connect timeout, read timeout)
     
     res.raise_for_status()
-
     results = res.json()["search"]
 
     if not results:
